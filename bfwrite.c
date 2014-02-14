@@ -1,9 +1,22 @@
 //#include "sysdep.h"
 #include "bfd.h"
-           
-           
-           
-           
+
+#include<stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>                      
+void (*findsections)(bfd *abfd, asection *sect, PTR obj);    
+
+
+//void findsections(bfd *abfd, asection *sect, PTR obj){
+	//This is the section where you print things out
+	//write(1,abfd->sections,40);
+
+
+//}
+
+void itoa(	);	
+      
 int main(int argc, char *argv[])
 {
 	bfd *abfd;
@@ -35,7 +48,7 @@ int main(int argc, char *argv[])
 	chk = bfd_check_format (abfd, bfd_object);
 		bfd_perror(err);
 		
-	const char *name1 = ".data";
+	const char *name1 = ".interp";
 //	 bfd_get_section_by_name(abfd, name);
 		bfd_perror(err);
 		
@@ -58,21 +71,56 @@ int main(int argc, char *argv[])
 //void bfd_map_over_sections(abfd,func(abfd, sect,ptrs[0]), ptrs[0]);
 //             bfd_perror(err);
 
-//loopy
+asymbol **loc;
+//loopy	
+//BFD_SEND(abfd, _bfd_get_symtab_upper_bound, (abfd));
+//	bfd_perror(err);
+//BFD_SEND (abfd, _bfd_canonicalize_symtab,(abfd, loc));
+//	bfd_perror(err);
+
+
+	int ii = 0;
+	char tester[100];
           asection *p;
+          char *testn;
+          int testsize;
+          char *testvma;
+          char *testfpos; 
+//	Replace below with bfd_map_overSections which calls abfd, findsections(), NULL)
+//	void bfd_map_over_sections(abfd,   findsections,    0);
+	
           for (p = abfd->sections; p != 0; p = p->next)
           {
 //            	func(abfd, p, new);
-                write(1, *p, 25);          
-
+//	printf("section: (name:%s vma:%x raw-sz:%x, cooked-sz:%x, offset:%x\n",
+//	p->name, p->vma, p->rawsize, p->size, p->filepos);
+		testn = p->name;
+		testsize = p->size;
+		testvma = (char*)p->vma;
+		testfpos = (char*)p->filepos;
+		write(1, (char*)p->name,(size_t)sizeof(testn));
+		write(1,(int*) testsize,(size_t)sizeof(testsize));
+//		write(1, (char*)p->vma,(size_t)sizeof(testvma));
+//		write(1, (char*)p->filepos,(size_t)sizeof(testfpos));
+		write(1, "\n", 2);
           }
                           
-	write(1,new->section,25);
+//	write(1,new->section,25);
 
-	ptrs[0] = new;
-	ptrs[1] = 0;
+//	ptrs[0] = new;
+//	ptrs[1] = 0;
 
 	bfd_set_symtab (abfd, ptrs, 1);
 	bfd_close (abfd);
 	return 0;
 }
+
+void hextochar (   ){
+	
+	
+
+}
+
+
+
+
