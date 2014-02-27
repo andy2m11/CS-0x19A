@@ -118,12 +118,13 @@ asymbol **loc;
 	   write (1, sect->name, sizeof(sect->name));
 	    //for(cnt; cnt<=18; cnt++){ write(1," ",1);}
 
+	    	write (1, p->name, sizeof(p->name));
 		write(1,"     ",5);
-		print_int(sect->lma,16);
-	    print_int(sect->rawsize,16);
-		print_int(sect->size,16);
-		print_int(sect->filepos,16);
-	    write(1,"\n",1);
+		print_int(p->lma,16);
+	  	print_int(p->rawsize,16);
+		print_int(p->size,16);
+		print_int(p->filepos,16);
+	  	write(1,"\n",1);
 	  
   
          }
