@@ -6,8 +6,7 @@
 #include <string.h>
 #include <dlfcn.h> 
                      
-extern size_t itoa (int x, char *s, unsigned base);
-extern void print_int (int x, unsigned base);
+
 extern void getsects(bfd *abfd);
 
 #define rdtsc(x)      __asm__ __volatile__("rdtsc \n\t" : "=A" (*(x)))
@@ -60,7 +59,15 @@ int main(int argc, char *argv[])
             fputs (dlerror(), stderr);
             exit(1);
         }
-        
+	asm volatile("rdtsc" : "=a" (e), "=d" (f));  
+	tick2 = (((long)e) | (((long)f) << 32)); // calculating the tick value.
+	printf("time end: %lu\n",tick1);
+	unsigned time;
+	time = (unsigned)((tick2 -tick1)/2530000); //cpu is 2.53 GHZ
+	printf("time(ms): %u\n",time);
+	printf("rdtsc start: %llu\n",start);
+	printf("rdtsc finish: %llu\n",finish);	
+	printf("rdtsc time: %llu\n",(finish-start)/2530000000);	
 	write(1,"XXXXxxxxxxxxX\n",15);
 	
 	func = dlsym(handle, "getsects");
@@ -73,13 +80,7 @@ int main(int argc, char *argv[])
 	
 	getsects(abfd);
 	
-	asm volatile("rdtsc" : "=a" (e), "=d" (f));  
-	tick2 = (((long)e) | (((long)f) << 32)); // calculating the tick value.
-	printf("time end: %lu\n",tick1);
-	unsigned time;
-	time = (unsigned)((tick2 -tick1)/2530000); //cpu is 2.53 GHZ
-	printf("time(ms): %u\n",time);
-	
+
 	
 	rdtsc(&finish);
 		

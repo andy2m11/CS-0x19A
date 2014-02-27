@@ -7,8 +7,8 @@
 #include <dlfcn.h>                 
 
 
-extern itoa (int x, char *s, unsigned base); 
-extern void print_int (int x, unsigned base);
+
+
 extern void getsyms(bfd *abfd);
         
 #define rdtsc(x)      __asm__ __volatile__("rdtsc \n\t" : "=A" (*(x)))
@@ -58,7 +58,7 @@ int main(int argc, char *argv[]){
 	
 	dlclose(handle);	
 	
-		asm volatile("rdtsc" : "=a" (e), "=d" (f));  
+	asm volatile("rdtsc" : "=a" (e), "=d" (f));  
 	tick2 = (((long)e) | (((long)f) << 32)); // calculating the tick value.
 	printf("time end: %lu\n",tick1);
 	unsigned time;

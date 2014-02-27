@@ -1,14 +1,14 @@
-//#include "sysdep.h"
+
 #include "bfd.h"
-#include<stdlib.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h> 
 #include <dlfcn.h>                 
 
 
-extern itoa (int x, char *s, unsigned base); 
-extern void print_int (int x, unsigned base);
+
+
 extern void getsyms(bfd *abfd);
         
 #define rdtsc(x)      __asm__ __volatile__("rdtsc \n\t" : "=A" (*(x)))

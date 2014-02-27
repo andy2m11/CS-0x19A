@@ -4,7 +4,7 @@
 #include <string.h>
 #include <unistd.h> 
  
-extern size_t itoa (int x, char *s, unsigned base);
+
 extern void print_int (int x, unsigned base);
 
 void getsyms(bfd *obj){
