@@ -10,7 +10,10 @@
 extern itoa (int x, char *s, unsigned base); 
 extern void print_int (int x, unsigned base);
 extern void getsyms(bfd *abfd);
-         
+        
+#define rdtsc(x)      __asm__ __volatile__("rdtsc \n\t" : "=A" (*(x)))
+        
+     
 int main(int argc, char *argv[]){
 
 	bfd *abfd;
@@ -37,13 +40,33 @@ int main(int argc, char *argv[]){
 	chk = bfd_check_format (abfd, bfd_object);
 		bfd_perror(err);
 
-  	  asection *p;
+	unsigned long long start, finish;    		
+  	rdtsc(&start);
+	long tick1, tick2; 
+
+	unsigned c,d,e,f;
+	asm volatile("rdtsc" : "=a" (c), "=d" (d));
+	tick1 = (((long)c) | (((long)d) << 32)); // calculating the tick value.
+	printf("time start: %lu\n",tick1);
+  	
+  	asection *p;
 	handle = dlopen("./libobjdata.so",RTLD_LAZY);
 	func = dlsym(handle, "getsyms");
 	
 
 	getsyms(abfd);	
-	dlclose(handle);
+	
+	dlclose(handle);	
+	
+		asm volatile("rdtsc" : "=a" (e), "=d" (f));  
+	tick2 = (((long)e) | (((long)f) << 32)); // calculating the tick value.
+	printf("time end: %lu\n",tick1);
+	unsigned time;
+	time = (unsigned)((tick2 -tick1)/2530000); //cpu is 2.53 GHZ
+	printf("time(ms): %u\n",time);
+	
+	
+	rdtsc(&finish);
 		
 		
 }
