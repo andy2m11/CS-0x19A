@@ -12,17 +12,22 @@
 
 void (*findsections)(bfd *abfd, asection *sect, PTR obj);    
 
+
+//void findsections(bfd *abfd, asection *sect, PTR obj){
+	//This is the section where you print things out
+	//write(1,abfd->sections,40);
+
+
+//}
+
+void itoa(	);	
 void numtoarray(int num, int array[]);
 void hextochar(int num, char* outc);
 
+
+
 void reverse(char *s, size_t s_len);
 size_t ultoa(char *s, unsigned long int n);      
-size_t itoa (int x, char *s, unsigned base);
-static void print_int (int x, unsigned base);
-
-
-
-     
 
 
 int main(int argc, char *argv[])
@@ -40,17 +45,11 @@ int main(int argc, char *argv[])
      		   
 //        bfd_format aa;
 //  		bfd_perror(err);       
- 	 if (abfd != NULL)
- 	 {
- 	   //printf ("open bfd\n");
-	    //write(1,argv[1],sizeof(argv[1]));
-		write(1," opened\n",sizeof(" opened\n"));
-  	}
-  	
+
   	_bfd_new_bfd();
   		bfd_perror(err);
   	
-  	bfd_set_default_target(target);
+  	bfd_set_default_target(*list);
 //  	bfd_find_target(msg,abfd);
   		bfd_perror(err);
   	
@@ -66,9 +65,21 @@ int main(int argc, char *argv[])
 //	 bfd_get_section_by_name(abfd, name);
 		bfd_perror(err);
 
+//write(1,(char)chk,20);		
+//==========================		
+//	bfd_set_format (abfd, bfd_object);
+//	new = bfd_make_empty_symbol (abfd);
+//	new->name = "dummy_symbol";
+//	new->section = bfd_make_section_old_way (abfd, ".text");
+//	new->flags = BSF_GLOBAL;
+//	new->value = 0x12345;
+//		bfd_perror(err);
 
-
-
+//The old way		
+	bfd_get_section_by_name(abfd, name1);	
+		bfd_perror(err);
+		write(1, bfd_get_section_by_name(abfd, name1)	, 25);          
+	
 	asection *sect;	
 	
 //void bfd_map_over_sections(abfd,func(abfd, sect,ptrs[0]), ptrs[0]);
@@ -95,39 +106,30 @@ asymbol **loc;
 	write(1, firstline, 59);
 //	Replace below with bfd_map_overSections which calls abfd, findsections(), NULL)
 //	void bfd_map_over_sections(abfd,   findsections,    0);
-//	int arrayTest[20] = {0};
-      	
+	int arrayTest[20] = {0};
           for (p = abfd->sections; p != 0; p = p->next)
           {
 //            	func(abfd, p, new);
 //	printf("section: (name:%s vma:%x raw-sz:%x, cooked-sz:%x, offset:%x\n",
 //	p->name, p->vma, p->rawsize, p->size, p->filepos);
-/*
 		testn = p->name;
 		testsize = p->size;
 		testvma = (char*)p->vma;
 		testfpos = (char*)p->filepos;
+//		hextochar(testsize, cTest);
+//		numtoarray(testsize,arrayTest);	
+//		hextochar(arrayTest, (char*)cTest);
 
 		write(1, (char*)p->name,(size_t)(sizeof(testn)));
 		write(1, space, 10);
 		write(1, (char*)cTest, 20);
 
-
+//		write(1,(int*) testsize,(size_t)sizeof(testsize));
+//		write(1, (char*)p->vma,(size_t)sizeof(testvma));
+//		write(1, (char*)p->filepos,(size_t)sizeof(testfpos));
 		write(1, "\n", 2);
-*/		
-	   write (1, sect->name, sizeof(sect->name));
-	    //for(cnt; cnt<=18; cnt++){ write(1," ",1);}
-
-		write(1,"     ",5);
-		print_int(sect->lma,16);
-	    print_int(sect->rawsize,16);
-		print_int(sect->size,16);
-		print_int(sect->filepos,16);
-	    write(1,"\n",1);
-	  
-  
          }
-                 
+                          
 //	ptrs[0] = new;
 //	ptrs[1] = 0;
 
@@ -136,8 +138,6 @@ asymbol **loc;
 	return 0;
 }
 
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////
 void numtoarray (int num, int array[]){
 	
 	int i = 0;
@@ -194,76 +194,3 @@ size_t ultoa(char *s, unsigned long int n) {
 	reverse(s, i);
 	return (i);
 }
-
-size_t itoa (int x, char *s, unsigned base)
-{
-  //printf ("in itoa\n");
-  char *p = s;
-  int t = x;
-  //flip value, if x is negative
-  if (x < 0)
-    t = -t;
-
-  //if base is smaller than 10
-  if (base <= 10)
-  {
-    do
-    {
-      *p++ = '0' + t % base;
-      t /= base;
-    }
-    while (t);
-    // add negative sign
-    if (x < 0)
-      *p++ = '-';
-  }
-  else if (base >= 10)
-  {
-    do
-    {
-      if (t % base < 10)
-      {
-        *p++ = '0' + t % base;
-        t /= base;
-      }
-      else
-      {
-        *p++ = 'A' + (t % base - 10);
-        t /= base;
-      }
-    }
-    while (t);
-
-    //put hexadecimal sign if base = 16
-    if (base == 16)
-    {
-      *p++ = 'x';
-      *p++ = '0';
-    };
-
-    // add negative sign
-    if (x < 0)
-      *p++ = '-';
-  }
-  //digits 
-  size_t size = p - s;
-  while (s < --p)
-  {
-    char t = *s;
-    *s++ = *p;
-    *p = t;
-  }
-  return size;
-}
-
-static void print_int (int x, unsigned base)
-{
-  //printf ("print_int\n");
-  char buf[100];
-  size_t n = itoa (x, buf, base);
-  //printf("itoa(%d) = %.*s.\n", x, (int) n, buf);
-  write (1, buf, n);
-  for(n;n<=11;n++){ write(1," ",1);}
-  write (1, "  ", 2);
-}
-

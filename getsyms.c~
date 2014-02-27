@@ -132,7 +132,6 @@ size_t itoa (int x, char *s, unsigned base)
     }
     while (t);
 
-
     //put hexadecimal sign if base = 16
     if (base == 16)
     {
