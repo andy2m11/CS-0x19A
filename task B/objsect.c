@@ -18,22 +18,23 @@ void reverse(char *s, size_t s_len) {
 	}
 }
 
-size_t ultoa(char *s, /*unsigned long*/ int n) {
+size_t ultoa(char *s, unsigned long int n, unsigned base) {
 	size_t i = 0;
 	if(n < 0)
 	{ n = -n;}
 	do {
-		if(n % 16 < 10){
-			s[i++] = n % 16 + '0';
+		if(n % base < 10){
+			s[i++] = n % base + '0';
 		}
 		else{
-			s[i++] = n % 16 + '0' + 7;
+			s[i++] = n % base + '0' + 7 +32;
 		}
-	} while (n /= 16);
+	} while (n /= base);
 	s[i] = '\0';
-	
-	s[i++] = 'x';
-	s[i++] = '0';
+	if(base == 16){
+		s[i++] = 'x';
+		s[i++] = '0';
+	}
 	reverse(s, i);
 	
 	return (i);
@@ -41,15 +42,18 @@ size_t ultoa(char *s, /*unsigned long*/ int n) {
 
 void print_int (int x, unsigned base)
 {
-  //printf ("print_int\n");
-  char buf[100];
+
+  char buf[100];  	
 //  size_t n = itoa (x, buf, base);
-  size_t n = ultoa(buf, x);
-  //printf("itoa(%d) = %.*s.\n", x, (int) n, buf);
+  size_t n = ultoa(buf, x, base);
   
   write (1, buf, n);
-  for(n;n<=11;n++){ write(1," ",1);}
+  for(n; n<=11; n++)
+  { 
+  	write(1," ",1);
+  }
   write (1, "  ", 2);
+
 }
 
  

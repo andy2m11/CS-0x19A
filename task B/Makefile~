@@ -8,7 +8,7 @@ all: $(LIBS) $(PROGS) $(OBJS)
 
 ###
 libobjdata.so: objsect.o objsym.o
-	gcc -shared $@ objsect.o objsym.o
+	gcc -shared -o $@ objsect.o objsym.o
 	
 objsect.o: objsect.c
 	gcc -fPIC -c objsect.c

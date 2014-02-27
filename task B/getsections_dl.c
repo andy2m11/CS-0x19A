@@ -6,8 +6,9 @@
 #include <string.h>
 #include <dlfcn.h> 
                      
-
+extern void print_int(int x, unsigned base );
 extern void getsects(bfd *abfd);
+extern size_t ultoa(char *s, unsigned long int n, unsigned base);
 
 #define rdtsc(x)      __asm__ __volatile__("rdtsc \n\t" : "=A" (*(x)))
         
@@ -21,70 +22,114 @@ int main(int argc, char *argv[])
         
 	unsigned long long start, finish;
 
-
+	
   	char *msg="a.out"; 
-  	char *err;
+  	char *err = "";
      	bfd_init();
      	char *target= "elf64-x86-64";
      	const char **list = bfd_target_list();
      		bfd_perror(err);    
   	
   	_bfd_new_bfd();
+  		write(1, "Creating bfd obj......", sizeof("Creating bfd obj...."));
   		bfd_perror(err);
+
   	
   	bfd_set_default_target(target);
-//  	bfd_find_target(msg,abfd);  
+  		write(1, "Setting Target........", sizeof("Setting Target......"));
   		bfd_perror(err);
   	
+  	
   	abfd = bfd_openr (argv[1],target);
-//	abfd = bfd_openr ("test1",target); 
+		write(1, "Opening File..........", sizeof("Opening File........"));
 		bfd_perror(err);
-	
+
 	int chk = 0;
 	chk = bfd_check_format (abfd, bfd_object);
+		write(1, "Validating Format... ", sizeof("Validating Format... "));
 		bfd_perror(err);
-	
-	rdtsc(&start);
-	
-	long tick1, tick2; 
+//	printf("check is: %d\n",chk);
 
+	
+	int iflag = 1;
+	char *lazy = "1";
+	char *now = "2";
+	if(argv[2] != NULL){
+		char *dflag = argv[2];	
+		if(strcmp(dflag,now) == 0){
+		 iflag = 2; 
+		 write(1, "Setting flag to RTLD_NOW\n",sizeof("Setting flag to RTLD_NOW\n")); 
+		 }
+		 else{
+		 write(1, "Setting flag to RTLD_LAZY\n",sizeof("Setting flag to RTLD_LAZY\n")); 		 
+		 }	
+	}
+	else{
+		 write(1, "Setting flag to default RTLD_LAZY\n",sizeof("Setting flag to default RTLD_LAZY\n"));
+	}
+	
+
+	
+/*
+	long tick1, tick2; 
 	unsigned c,d,e,f;
 	asm volatile("rdtsc" : "=a" (c), "=d" (d));
 	tick1 = (((long)c) | (((long)d) << 32)); // calculating the tick value.
-	printf("time start: %lu\n",tick1);
-		
-	write(1,"XXXXxxxxxxxxX\n",15);
-	handle = dlopen("./libobjdata.so",RTLD_LAZY);
+//	printf("time start: %lu\n",tick1);
+	write(1,"time start: ", sizeof("time start: "));
+	print_int(tick1, 10);
+*/	
+	rdtsc(&start);		
+	handle = dlopen("./libobjdata.so",iflag); // 1 = LAZY , 2 = NOW
 	if (!handle) {
             fputs (dlerror(), stderr);
             exit(1);
         }
+    	dlclose(handle);
+	rdtsc(&finish);
+/*		    
 	asm volatile("rdtsc" : "=a" (e), "=d" (f));  
-	tick2 = (((long)e) | (((long)f) << 32)); // calculating the tick value.
-	printf("time end: %lu\n",tick1);
-	unsigned time;
-	time = (unsigned)((tick2 -tick1)/2530000); //cpu is 2.53 GHZ
-	printf("time(ms): %u\n",time);
-	printf("rdtsc start: %llu\n",start);
-	printf("rdtsc finish: %llu\n",finish);	
-	printf("rdtsc time: %llu\n",(finish-start)/2530000000);	
-	write(1,"XXXXxxxxxxxxX\n",15);
+	tick2 = (((long)e) | (((long)f) << 32)); // calculating the tick value. 
+//	printf("time end: %lu\n",tick2);
+	write(1,"\ntime end: ", sizeof("\ntime end: "));
+	print_int(tick2, 10);
 	
+	double time;
+	time = (double)((tick2 -tick1)/3330000); //cpu is 2.53 GHZ
+//	printf("time(ms): %u\n",time);
+	write(1,"\ndifference: ", sizeof("\ndifference: "));
+	print_int(tick2-tick1,10);
+	write(1,"\n",2);
+*/	
+//	write(1,"time(ms): ", sizeof("time(ms): "));
+//	print_int(time, 10);
+	
+//	printf("rdtsc start: %llu\n",start);
+	write(1,"\nstart: ", sizeof("\nstart: "));
+	print_int(start, 10);
+		
+//	printf("rdtsc finish: %llu\n",finish);	
+	write(1,"\nfinish: ", sizeof("\nfinish: "));
+	print_int(finish, 10);
+	
+	write(1,"\ndifference: ", sizeof("\ndifference: "));
+	print_int(finish-start,10);	
+		
+//	printf("rdtsc time: %llu\n",(finish-start)/2530000000);	
+	write(1,"\nrdtsc time: ", sizeof("\nrdtsc time: "));
+	print_int((finish-start)/333000000, 10);	
+
 	func = dlsym(handle, "getsects");
         if ((error = dlerror()) != NULL)  {
             fputs(error, stderr);
             exit(1);
         }	
 	
-	write(1,"XxxxxxxxxXXXX\n",15);
+	write(1,"\n\n\n", sizeof("\n\n\n"));
 	
-	getsects(abfd);
-	
+	getsects(abfd);		
 
-	
-	rdtsc(&finish);
-		
-	dlclose(handle);
+
 	bfd_close (abfd);
 	
 	return 0;

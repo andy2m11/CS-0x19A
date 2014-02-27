@@ -1,6 +1,6 @@
 //#include "sysdep.h"
 #include "bfd.h"
-#include<stdlib.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h> 
@@ -18,7 +18,7 @@ int main(int argc, char *argv[]){
   	char *err;
      	bfd_init();
      	char *target= "elf64-x86-64";
-//     	const char **list = bfd_target_list(); 
+//     	const char **list = bfd_target_list();  
 //     		bfd_perror(err);    
 	        	
   	_bfd_new_bfd();
@@ -35,7 +35,8 @@ int main(int argc, char *argv[]){
 	int chk = 0;
 	chk = bfd_check_format (abfd, bfd_object);
 		bfd_perror(err);
-
+//	printf("chk: %d\n",chk);
+  	
   	  asection *p;
 
 	getsyms(abfd);	

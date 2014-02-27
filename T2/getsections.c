@@ -28,20 +28,17 @@ int main(int argc, char *argv[])
   		bfd_perror(err);
   	
   	bfd_set_default_target(target);
-//  	bfd_find_target(msg,abfd);
+//  	bfd_find_target(msg,abfd); 
   		bfd_perror(err);
   	
   	abfd = bfd_openr (argv[1],target);
-//	abfd = bfd_openr ("test1",target);
+//	abfd = bfd_openr ("test1",target);  
 		bfd_perror(err);
 	
 	int chk = 0;
 	chk = bfd_check_format (abfd, bfd_object);
 		bfd_perror(err);
 		
-	const char *name1 = ".interp";
-//	 bfd_get_section_by_name(abfd, name);
-		bfd_perror(err);
 
 
 
