@@ -40,11 +40,11 @@ size_t ultoa(char *s, unsigned long int n, unsigned base) {
 	return (i);
 }
 
-void print_int (int x, unsigned base)
+void print_int(int x, unsigned base)
 {
 
   char buf[100];  	
-//  size_t n = itoa (x, buf, base);
+
   size_t n = ultoa(buf, x, base);
   
   write (1, buf, n);
