@@ -1,23 +1,30 @@
 $(shell export LD_LIBRARY_PATH=$PWD:$LD_LIBRARY_PATH)
 
 
+PROGS = getsections getsyms
+OBJS = objsect.o objsym.o
+LIBS = libobjdata.a
+all: $(LIBS) $(PROGS) $(OBJS)
 
-#getsections: getsections.c 
-#	gcc -o objsect.o getsections.c -lbfd  $@
+
+getsections: getsections.c 
+	gcc -o $@ getsections.c -lbfd -L. -lobjdata
+
+getsyms: getsyms.c 
+	gcc -o $@ getsyms.c -lbfd -L. -lobjdata
+
+objsect.o: objsect.c
+	gcc -c objsect.c
+	
+objsym.o: objsym.c
+	gcc -c objsym.c
 
 
 libobjdata.a: objsect.o objsym.o
-	ar rc libobjdata.a object.o objsym.o
+	ar rc libobjdata.a objsect.o objsym.o
+	ranlib libobjdata.a
 
-objsect.o: getsections.c
-	gcc -c getsections.c
-	
-objsym.o: getsyms.c
-	gcc -c getsyms.c
-
-
-
-
-
+clean:
+	rm -f *.0 *~ *.so $(PROGS)
 
 
