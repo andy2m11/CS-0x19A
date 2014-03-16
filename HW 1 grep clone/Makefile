@@ -1,7 +1,7 @@
 $(shell export LD_LIBRARY_PATH=$PWD:$LD_LIBRARY_PATH)
 
-
-PROGS = tshell exshell gopt
+#Time: start 3:00
+PROGS = tshell exshell gopt finds
 #OBJS = objserver.o
 #LIBS = libobjserver.a #libobjserver.so
 all: $(LIBS) $(PROGS) $(OBJS)
@@ -12,8 +12,8 @@ exshell: shell_example.c
 
 tshell: tshell.c
 	gcc -o $@ tshell.c
-
-gopt: getopt.c
+	
+finds: getopt.c
 	gcc -o $@ getopt.c
 	
 	

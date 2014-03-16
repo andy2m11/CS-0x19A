@@ -8,6 +8,8 @@
 #include <limits.h>
 #include <errno.h>  
 #include <sys/stat.h> 
+
+
 struct arguments{
 	int f;
 	int l;
@@ -20,15 +22,15 @@ struct arguments{
 /* function type that is called for each filename */
 typedef int Myfunc(const char *, const struct stat *, int);
 static Myfunc myfunc;
- int myftw(char *, Myfunc *);
- int getPaths(Myfunc *);
+int myftw(char *, Myfunc *);
+int getPaths(Myfunc *);
 static long nreg, ndir, nblk, nchr, nfifo, nslink, nsock, ntot;
 #define FTW_F 1 /* file other than directory */
 #define FTW_D 2 /* directory */
 #define FTW_DNR 3 /* directory that can’t be read */
 #define FTW_NS 4 /* file that we can’t stat */   
 static size_t pathlen;
-
+void scanFile(char *pathname, char *findthis);
 /*   
 	finds -p pathname [-f c|h|S] [-l] -s s   
 
@@ -55,11 +57,9 @@ int main (int argc, char **argv)
          switch (c)
            {
            case 'l':
-             fprintf (stderr, "%s\n", "Case l");
              ar.l = 1;
              break;
            case 'f':
-             fprintf (stderr, "%s\n", "Case f");
              ar.fval = optarg;
              if(strcmp(ar.fval, "c") != 0 && strcmp(ar.fval, "h") != 0 && strcmp(ar.fval, "S") != 0 ){
              	fprintf (stderr, "Option -%c only accepts 'c', 'h', or 'S' as arguments.\n", optopt);
@@ -71,14 +71,19 @@ int main (int argc, char **argv)
              }
              break;
            case 'p':
-             fprintf (stderr, "%s\n", "Case p");
              ar.pval = optarg;
              if ((dp = opendir((char*)ar.pval)) == NULL){
-               fprintf (stderr,"fd %d: %s is not a %s\n", filechk, ar.pval, "valid pathname");
+               fprintf (stderr,"%s is not a valid pathname\n", ar.pval);
                return 1;             
              }
-             else{
+             else{          
                ar.p = 1;
+               int nlen = strlen(ar.pval);
+               fprintf(stderr, "%d... %c\n " ,nlen, ar.pval[nlen-1]);
+               if(ar.pval[nlen-1] == '/'){             
+                 fprintf(stderr, "deleting... %c\n " ,ar.pval[nlen-1]);
+                 ar.pval[nlen-1] = 0;
+               }
              }
 /*             filechk = open(ar.pval, O_RDONLY);
              if(filechk > 0){
@@ -91,7 +96,6 @@ int main (int argc, char **argv)
              }					*/
              break;
            case 's':
-             fprintf (stderr, "%s\n", "Case s");    
              ar.s = 1;
              ar.sval = optarg;           
              break;
@@ -133,7 +137,10 @@ int main (int argc, char **argv)
        return 0;       
        
 }
-///////////////////////////////////////////////////////////////////////////////////
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////
 #ifdef  PATH_MAX
 static int pathmax=PATH_MAX;
 #else
@@ -165,6 +172,7 @@ char *path_alloc(int *size)
         *size = pathmax + 1;
     return (ptr);
 }
+//---------------------------------------------------------------------
 myftw(char *pathname, Myfunc *func)
 {
  	fprintf(stderr, "Searching directory: %s\n", pathname);
@@ -179,13 +187,13 @@ myftw(char *pathname, Myfunc *func)
 	strcpy(ar.pval, pathname);
 	return(getPaths(func));
 }
-
+//---------------------------------------------------------------------
 int getPaths(Myfunc* func){
 
 	struct stat statbuf;
 	struct dirent *dirp;
 	DIR *dp;
-	int ret, n;
+	int ret, n, fnlen;
 	if (lstat(ar.pval, &statbuf) < 0)
 		return(func(ar.pval, &statbuf,FTW_NS));/* stat error */
 
@@ -198,42 +206,83 @@ int getPaths(Myfunc* func){
 	*/
 	if ((ret = func(ar.pval, &statbuf, FTW_D)) != 0)
 		return(ret);
-	n = strlen(ar.pval);
+	n = strlen(ar.pval);	
 	if (n + NAME_MAX + 2 > pathlen) {
 	/* expand path buffer */
 		pathlen *= 2;
 		if ((ar.pval = realloc(ar.pval, pathlen)) == NULL)
 			 fprintf(stderr, "%s\n", "Alloc failed");
+	
 	}
 	ar.pval[n++] = '/';
 	ar.pval[n] = 0;
 	if ((dp = opendir(ar.pval)) == NULL)	// can’t read directory 
 		return(func(ar.pval, &statbuf, FTW_DNR));
-//	fprintf(stderr, "%s\n", ar.pval); //print directory name
+//	fprintf(stdout, "Dir: %s\n", ar.pval); //print directory name
 	while ((dirp = readdir(dp)) != NULL) {
 		if (strcmp(dirp->d_name, ".") == 0 || strcmp(dirp->d_name, "..") == 0){
 		  continue;/* ignore dot and dot-dot */
 		}		
 		strcpy(&ar.pval[n], dirp->d_name); /* append name after "/" */
-		fprintf(stderr, "%s\n", ar.pval);
-//		fprintf(stderr, "%s\n", dirp->d_name); // print name of file or directory
+		fnlen = strlen(dirp->d_name) - 1;
+		if(ar.f > 0){	//if the f flag was set
+		  if(ar.pval[n+fnlen] == ar.fval[0]){	//match with chosen file type
+//		    fprintf(stdout, "%s\n", ar.pval); // print full file pathname
+//		    fprintf(stdout, "%s\n", dirp->d_name); // print name of file
+		    scanFile(ar.pval, ar.sval);
+//		    scanFile(dirp->d_name, ar.sval);		    
+ 		  }
+ 		}
+ 		else{
+//		    fprintf(stdout, "%s\n", ar.pval); // print full file pathname
+		    scanFile(ar.pval, ar.sval);
+ 		}
 		if ((ret = getPaths(func)) != 0){	/* recursive */
 		  fprintf(stderr, "Got getPaths != 0 %d %s\n", ret, dirp->d_name);
 		  break; /* time to leave */
 		}
 	}
 	ar.pval[n-1] = 0; /* erase everything from slash onward */
-	if (closedir(dp) < 0)
-		fprintf(stderr, "%s\n", "Can't close directory");
-	
+	if (closedir(dp) < 0){
+	  fprintf(stderr, "%s\n", "Can't close directory");
+	}
 	return(ret);
   
 
 }
 
+void scanFile(char *pathname, char *findthis){
+	int buflen = 2048;
+	char line[buflen];
+	char *match;
+	int line_count = 0;
+
+	FILE* pFile;
+	pFile = fopen(pathname, "r");
+	if (pFile == NULL){
+	  fprintf(stderr, "Unable to open: %s\n", pathname);
+	}
+	else{
+	  while(fgets(line, buflen, pFile) != NULL){
+	    line_count++;
+	    match = strstr((const char*)line,(const char*) findthis);
+	    if(match != NULL){
+	      fprintf(stdout, "\"%s\" found on line %d in: %s\n", findthis, line_count, pathname);
+//	      fprintf(stdout, "line%d:  ", line_count);
+//	      fprintf(stdout, "   %s",line);
+//	      fprintf(stdout, "In:%s", pathname);		      
+	    }
+	  }
+	  fclose(pFile);	  
+	}
+
+	
+}
+
+//---------------------------------------------------------------------
 int myfunc(const char *pathname, const struct stat *statptr, int type)
 {
-//	fprintf(stderr, "%s\n", "My func");
+//	fprintf(stderr, "%s\n", pathname);
 	switch (type) {
 		case FTW_F:
 		  switch (statptr->st_mode & S_IFMT) {
