@@ -30,7 +30,9 @@ static long nreg, ndir, nblk, nchr, nfifo, nslink, nsock, ntot;
 #define FTW_DNR 3 /* directory that can’t be read */
 #define FTW_NS 4 /* file that we can’t stat */   
 static size_t pathlen;
+void scanLink(char *pathname, char *findthis);
 void scanFile(char *pathname, char *findthis);
+void wildcards(char **outputstr, char *inputstr);
 /*   
 	finds -p pathname [-f c|h|S] [-l] -s s   
 
@@ -57,7 +59,7 @@ int main (int argc, char **argv)
          switch (c)
            {
            case 'l':
-             ar.l = 1;
+             ar.l = 1;       
              break;
            case 'f':
              ar.fval = optarg;
@@ -175,10 +177,9 @@ char *path_alloc(int *size)
 //---------------------------------------------------------------------
 myftw(char *pathname, Myfunc *func)
 {
- 	fprintf(stderr, "Searching directory: %s\n", pathname);
+ 	fprintf(stderr, "Searching for %s in: %s\n",ar.sval, pathname);
 	ar.pval = (char*)path_alloc(&pathlen);
 	/* malloc PATH_MAX+1 bytes */
-	/* (Figure 2.16) */
 	if (pathlen <= strlen(pathname)) {
 		pathlen = strlen(pathname) * 2;
 		if ((ar.pval = realloc(ar.pval, pathlen)) == NULL)
@@ -234,8 +235,11 @@ int getPaths(Myfunc* func){
  		  }
  		}
  		else{
-//		    fprintf(stdout, "%s\n", ar.pval); // print full file pathname
-		    scanFile(ar.pval, ar.sval);
+//		  fprintf(stdout, "%s\n", ar.pval); // print full file pathname
+		  scanFile(ar.pval, ar.sval);
+ 		}
+ 		if(ar.l > 0){ 		
+		  scanLink(ar.pval, ar.sval);
  		}
 		if ((ret = getPaths(func)) != 0){	/* recursive */
 		  fprintf(stderr, "Got getPaths != 0 %d %s\n", ret, dirp->d_name);
@@ -251,12 +255,20 @@ int getPaths(Myfunc* func){
 
 }
 
+void scanLink(char *pathname, char *findthis){
+	char *match;
+	match = strstr(pathname,findthis);
+	if(match != NULL){
+	  fprintf(stdout, "\"%s\" found on %s\n", findthis, pathname);	      
+	}
+
+}
 void scanFile(char *pathname, char *findthis){
 	int buflen = 2048;
 	char line[buflen];
 	char *match;
 	int line_count = 0;
-
+//	fprintf(stderr, "Looking for %s in: %s\n",findthis ,pathname);
 	FILE* pFile;
 	pFile = fopen(pathname, "r");
 	if (pFile == NULL){
@@ -265,7 +277,7 @@ void scanFile(char *pathname, char *findthis){
 	else{
 	  while(fgets(line, buflen, pFile) != NULL){
 	    line_count++;
-	    match = strstr((const char*)line,(const char*) findthis);
+	    match = strstr(line,findthis);
 	    if(match != NULL){
 	      fprintf(stdout, "\"%s\" found on line %d in: %s\n", findthis, line_count, pathname);
 //	      fprintf(stdout, "line%d:  ", line_count);
@@ -323,5 +335,34 @@ int myfunc(const char *pathname, const struct stat *statptr, int type)
 	}
 	return(0);
 }
+//-----------------------------------------------------------------------------
+void wildcards(char **outputstr, char *inputstr){
+
+	int len = strlen(inputstr);
+	int ii = 0;
+	for(ii = 0; ii < len; ii++){
+	  if(inputstr[ii] == '.'){
+	  
+	  }
+	  else if(inputstr[ii] == '*'){
+	  
+	  }
+	  else if(inputstr[ii] =='?'){
+	  
+	  } 
+	  
+	  
+	  
+	}
+
+}
+
+
+
+
+
+
+
+
 
 
