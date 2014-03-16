@@ -32,7 +32,9 @@ static long nreg, ndir, nblk, nchr, nfifo, nslink, nsock, ntot;
 static size_t pathlen;
 void scanLink(char *pathname, char *findthis);
 void scanFile(char *pathname, char *findthis);
-void wildcards(char **outputstr, char *inputstr);
+int wildcards(char **outputstr, char *inputstr);
+int match(char *first, char * second);
+void wcScan(char *pathname, char *findthis);
 /*   
 	finds -p pathname [-f c|h|S] [-l] -s s   
 
@@ -237,6 +239,7 @@ int getPaths(Myfunc* func){
  		else{
 //		  fprintf(stdout, "%s\n", ar.pval); // print full file pathname
 		  scanFile(ar.pval, ar.sval);
+//		  wcScan(ar.pval, ar.sval);
  		}
  		if(ar.l > 0){ 		
 		  scanLink(ar.pval, ar.sval);
@@ -336,28 +339,89 @@ int myfunc(const char *pathname, const struct stat *statptr, int type)
 	return(0);
 }
 //-----------------------------------------------------------------------------
-void wildcards(char **outputstr, char *inputstr){
+
+
+
+//void wildcards(char **outputstr, char *inputstr){
+int wildcards(char **outputstr, char *inputstr){
 
 	int len = strlen(inputstr);
 	int ii = 0;
+	int wcount = 0;
+	int total = 0;
+
 	for(ii = 0; ii < len; ii++){
 	  if(inputstr[ii] == '.'){
-	  
+	    wcount++;
+	    
 	  }
 	  else if(inputstr[ii] == '*'){
-	  
+	    wcount++;
+	    
 	  }
 	  else if(inputstr[ii] =='?'){
-	  
+	    wcount++;
+	    
 	  } 
 	  
 	  
 	  
-	}
-
+	}	//end for
+	
+   return wcount;
 }
 
+int match(char *first, char * second)
+{
+    // If we reach at the end of both strings, we are done
+    if (*first == '\0' && *second == '\0')
+        return 1;
+ 
+    // Make sure that the characters after '*' are present in second string.
+    // This function assumes that the first string will not contain two
+    // consecutive '*' 
+    if (*first == '*' && *(first+1) != '\0' && *second == '\0')
+        return 0;
+ 
+    // If the first string contains '?', or current characters of both 
+    // strings match
+    if (*first == '?' || *first == *second)
+        return match(first+1, second+1);
+ 
+    // If there is *, then there are two possibilities
+    // a) We consider current character of second string
+    // b) We ignore current character of second string.
+    if (*first == '*')
+        return match(first+1, second) || match(first, second+1);
+    return 0;
+}
+void wcScan(char *pathname, char *findthis){
+	int buflen = 2048;
+	char line[buflen];
+	int line_count = 0;
+	int m = 0;
+//	fprintf(stderr, "Looking for %s in: %s\n",findthis ,pathname);
+	FILE* pFile;
+	pFile = fopen(pathname, "r");
+	if (pFile == NULL){
+	  fprintf(stderr, "Unable to open: %s\n", pathname);
+	}
+	else{
+	  while(fgets(line, buflen, pFile) != NULL){
+	    line_count++;
+	    m = match(line, findthis);
+	    if(match != 0){
+	      fprintf(stdout, "\"%s\" found on line %d in: %s\n", findthis, line_count, pathname);
+//	      fprintf(stdout, "line%d:  ", line_count);
+//	      fprintf(stdout, "   %s",line);
+//	      fprintf(stdout, "In:%s", pathname);		      
+	    }
+	  }
+	  fclose(pFile);	  
+	}
 
+	
+}
 
 
 
