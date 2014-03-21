@@ -35,16 +35,10 @@ void scanFile(char *pathname, char *findthis);
 int wildcards(char **outputstr, char *inputstr);
 int match(char *first, char * second);
 void wcScan(char *pathname, char *findthis);
-/*   
-	finds -p pathname [-f c|h|S] [-l] -s s   
+int cdot(char *ostr, char *istr);
 
-The pathname is a string identifying some location in the directory hierarchy e.g., /, /home/joe, ., or .. 
-The -f flag is optional but must be followed by either "c", "h" or "S" to identify the file suffixes for the files that we wish to search. For example, "-f c" means search for all files with a .c ending, while "-f h" means search for all files with a .h ending. If the -f option is not used, it is assumed that you wish to search through all regular files from the pathname for those files containing "s".
 
-The -l option, when specified, means search for regular files and symbolic links with the suffix specified by the -f option. If the -l option is specified and -f is not, then your program should search for all regular files and all symbolic links starting from pathname.
 
-The final argument accepted by "finds" is specified by the -s flag and is followed by the search string "s".
-*/
 int main (int argc, char **argv)
 {
        ar.l = 0;       
@@ -89,15 +83,7 @@ int main (int argc, char **argv)
                  ar.pval[nlen-1] = 0;
                }
              }
-/*             filechk = open(ar.pval, O_RDONLY);
-             if(filechk > 0){
-    	       fprintf (stderr,"Opening fd %d: %s\n", filechk, ar.pval);
-               ar.p = 1;       
-             }
-             else{
-               fprintf (stderr,"fd %d: %s is not a %s\n", filechk, ar.pval, "valid pathname");
-               return 1;
-             }					*/
+
              break;
            case 's':
              ar.s = 1;
@@ -233,13 +219,15 @@ int getPaths(Myfunc* func){
 //		    fprintf(stdout, "%s\n", ar.pval); // print full file pathname
 //		    fprintf(stdout, "%s\n", dirp->d_name); // print name of file
 		    scanFile(ar.pval, ar.sval);
-//		    scanFile(dirp->d_name, ar.sval);		    
+//		    scanFile(dirp->d_name, ar.sval);
+//		  cdot(ar.pval, ar.sval);		    
  		  }
  		}
  		else{
 //		  fprintf(stdout, "%s\n", ar.pval); // print full file pathname
 		  scanFile(ar.pval, ar.sval);
 //		  wcScan(ar.pval, ar.sval);
+//		  cdot(ar.pval, ar.sval);
  		}
  		if(ar.l > 0){ 		
 		  scanLink(ar.pval, ar.sval);
@@ -349,6 +337,9 @@ int wildcards(char **outputstr, char *inputstr){
 	int ii = 0;
 	int wcount = 0;
 	int total = 0;
+	char dot = NULL;
+	char star = NULL;	int sc = 0;
+	char qmark = NULL;
 
 	for(ii = 0; ii < len; ii++){
 	  if(inputstr[ii] == '.'){
@@ -357,13 +348,19 @@ int wildcards(char **outputstr, char *inputstr){
 	  }
 	  else if(inputstr[ii] == '*'){
 	    wcount++;
-	    
+//	    star = inputstr[ii-1];
+
 	  }
 	  else if(inputstr[ii] =='?'){
 	    wcount++;
+//	    qmark = inpustr[ii-1];
 	    
 	  } 
-	  
+	  // a .* copy of whatever . takes repeated till 2nd str
+	  // if .*, auto skip one, keep skipping if next = one
+	  //if .? auto skip one, if next = one skip.
+	  //if ?*/*? cancel out?
+	 
 	  
 	  
 	}	//end for
@@ -410,20 +407,61 @@ void wcScan(char *pathname, char *findthis){
 	  while(fgets(line, buflen, pFile) != NULL){
 	    line_count++;
 	    m = match(line, findthis);
-	    if(match != 0){
-	      fprintf(stdout, "\"%s\" found on line %d in: %s\n", findthis, line_count, pathname);
+	    if(m != 0){
+	      fprintf(stdout, "%d \n", m);
+//	      fprintf(stdout, "\"%s\" found on line %d in: %s\n", findthis, line_count, pathname);
 //	      fprintf(stdout, "line%d:  ", line_count);
 //	      fprintf(stdout, "   %s",line);
 //	      fprintf(stdout, "In:%s", pathname);		      
 	    }
 	  }
 	  fclose(pFile);	  
-	}
-
-	
+	}	
 }
 
+int cdot(char *ostr, char *istr){
+	int buflen = 2048;
+	char line[buflen];
+	int line_count = 0;
+	int m = 0;
+	int len = strlen(istr);
+	int ii = 0;
+	int count = 0;
+	for(ii = 0; ii < len; ii++){
+		if(istr[ii] == '.'){
+		fprintf(stderr, "------------------------------%c\n",istr[ii]);
+		
+		}
 
+		count++;
+	}
+//	fprintf(stderr, "Looking for %s in: %s\n",findthis ,pathname);
+	FILE* pFile;
+	pFile = fopen(ostr, "r");
+	if (pFile == NULL){
+	  fprintf(stderr, "Unable to open: %s\n", ostr);
+	}
+	else{
+	  while(fgets(line, buflen, pFile) != NULL){
+	    line_count++;
+	    m = match(line, istr);
+	    if(m != 0){
+//	      fprintf(stdout, "%d \n", m);
+//	      fprintf(stdout, "\"%s\" found on line %d in: %s\n", findthis, line_count, pathname);
+//	      fprintf(stdout, "line%d:  ", line_count);
+//	      fprintf(stdout, "   %s",line);
+//	      fprintf(stdout, "In:%s", pathname);		      
+	    }
+	  }
+	  fclose(pFile);	  
+	}	  
+}
+int cstar(char *ostr, char *istr){
+
+}
+int cqmark(char *ostr, char *istr){
+
+}
 
 
 
