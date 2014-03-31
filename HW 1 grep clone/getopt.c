@@ -36,7 +36,7 @@ int wildcards(char **outputstr, char *inputstr);
 int match(char *first, char * second);
 void wcScan(char *pathname, char *findthis);
 int cdot(char *pathname, char *findthis);
-
+void scanFile2(char *pathname, char *findthis);
 
 
 int main (int argc, char **argv)
@@ -50,7 +50,7 @@ int main (int argc, char **argv)
        opterr = 0;
        int filechk = 0;    
        DIR *dp;
-        
+
        while ((c = getopt (argc, argv, "lp:s:f:")) != -1){
          switch (c)
            {
@@ -225,9 +225,9 @@ int getPaths(Myfunc* func){
  		}
  		else{
 //		  fprintf(stdout, "%s\n", ar.pval); // print full file pathname
-//		  scanFile(ar.pval, ar.sval);
+		  scanFile2(ar.pval, ar.sval);
 //		  wcScan(ar.pval, ar.sval);
-		  cdot(ar.pval, ar.sval);
+//		  cdot(ar.pval, ar.sval);
 	
  		}
  		if(ar.l > 0){ 		
@@ -279,8 +279,100 @@ void scanFile(char *pathname, char *findthis){
 	  }
 	  fclose(pFile);	  
 	}
+}
 
+void scanFile2(char *pathname, char *findthis){
+	int buflen = 2048;
+	char line[buflen];
+	int line_count = 0;
+	int ii = 0;
+	int linepos = 0;
+	int matchcount = 0;
+	int needlen = strlen(findthis);
+	char cc;
+	int hits = 0;
+//	fprintf(stderr, "Looking for %s in: %s\n",findthis ,pathname);
+	FILE* pFile;
+	pFile = fopen(pathname, "r");
+	if (pFile == NULL){
+	  fprintf(stderr, "Unable to open: %s\n", pathname);
+	}
+	else{
 	
+	  while(fgets(line, buflen, pFile) != NULL)
+	  {
+	    line_count++;
+	    linepos = 0;
+	    while(line[linepos] != '\n')
+	    {   
+	    if(line[linepos] == '\n')
+	    {printf("NEWLINE FOUND \n");}
+	 //   printf("line pos: %d\n", linepos);
+	    	cc = line[linepos];
+	    	if(cc == findthis[hits] || findthis[hits] == '.')
+	    	{
+	    	hits++;
+	    	}
+	    	else
+	    	{	hits = 0;   	}
+	    	
+	    	if(findthis[hits+2] == '*')//qwea*bcd = qweabcd, qwebcd, qweaabcd
+	    	{
+	    		char afterstar = findthis[hits+3];
+	    		char beforestar = findthis[hits+1];
+	    		if(line[linepos+1] == beforestar)
+	    		{
+	    			hits++; linepos++;
+	    			while(line[linepos++] == beforestar)
+	    			{
+	    			  needlen++;
+	    			  hits++;	    			
+	    			}
+	    			if(line[linepos] != afterstar)
+	    			{
+	    			  needlen = strlen(findthis);
+	    			  hits = 0;
+	    			}
+	    			else
+	    			{
+	    			  needlen--;
+	    			  hits++;
+	    			}
+	    		}
+	    		else if(line[linepos+1] == afterstar)
+	    		{
+	    		linepos++;
+	    		needlen -= 2;
+	    		hits++;
+	    		}
+	    		else
+	    		{
+	    		hits = 0;
+	    		needlen = strlen(findthis);
+	    		}
+	    	}
+	    	else if(cc == '?')
+	    	{
+	    	
+	    	}
+	    	else
+	    	{
+	    		hits = 0;
+	    	}
+	    
+	    	if(hits == needlen)
+	    	{
+	    	printf("\"%s\" found on line %d in: %s\n", findthis, line_count, pathname);
+	    	
+	    	}
+	    linepos++;
+	    }
+	    
+	  }
+	  
+	  fclose(pFile);	  
+	}
+
 }
 
 //-----------------------------------------------------------------------------
@@ -293,11 +385,6 @@ int splitdot(char *input, int dotpos, char *out1, char *out2){
 	memmove(out1, input, dotpos);
 	memmove(out2, input+dotpos+1, len-dotpos);
 
-//	memset(out1+dotpos, 0, len);
-//	*out1[0] = '5';
-//	*out1[dotpos] = '\0';
-//	*out2[len-dotpos] = '\0';
-//	printf("o1 =%s, o2=%s \n", *out1, *out2);
 }
 
 
@@ -412,7 +499,7 @@ int match_dot(char *compare, char *findthis){
 //	w2[2] = '\0';
 	
 	clen = strlen(w2);
-//	char line[5];
+	char line[2];
 
 //	for(ii = 0; ii < 5; ii++)
 //	{
@@ -428,16 +515,7 @@ int match_dot(char *compare, char *findthis){
 //	{ return 0;		}
 //	match2 = strstr(compare, w2);
 //	printf("m1:%s  m2:%s \n", match1, match2);
-/*
-	if(match1 + 1 == match2)
-	{	printf("m1:%s  m2:%s \n", match1, match2);
-		return 1;
-	}
-	else
-	{
-		return 0;
-	}
-*/
+
 }
 
 int cdot(char *pathname, char *findthis){//pathname, findthis
