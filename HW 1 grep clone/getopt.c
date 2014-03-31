@@ -37,6 +37,11 @@ int match(char *first, char * second);
 void wcScan(char *pathname, char *findthis);
 int cdot(char *pathname, char *findthis);
 void scanFile2(char *pathname, char *findthis);
+#define FLAGS_NUMBER 5
+#define MAX_FILENAME_LENGTH 100
+#define MAX_FOUND_LENGTH 100
+#define MAX_LINE 1024
+#define SL_LIST_SIZE 1
 
 
 int main (int argc, char **argv)
@@ -218,7 +223,7 @@ int getPaths(Myfunc* func){
 		  if(ar.pval[n+fnlen] == ar.fval[0]){	//match with chosen file type
 //		    fprintf(stdout, "%s\n", ar.pval); // print full file pathname
 //		    fprintf(stdout, "%s\n", dirp->d_name); // print name of file
-//		    scanFile(ar.pval, ar.sval);
+		    scanFile2(ar.pval, ar.sval);
 //		    scanFile(dirp->d_name, ar.sval);
 //		  cdot(ar.pval, ar.sval);		    
  		  }
@@ -228,7 +233,30 @@ int getPaths(Myfunc* func){
 		  scanFile2(ar.pval, ar.sval);
 //		  wcScan(ar.pval, ar.sval);
 //		  cdot(ar.pval, ar.sval);
-	
+/*	  	  FILE *fp = fopen(dirp->d_name,"r");
+	  	  if (fp == NULL) 
+	  	  {
+			printf("Cannot open the file %s \n", dirp->d_name);
+			continue;
+		  }
+	  	  FILE *cp = fopen(dirp->d_name, "r");
+	  	  char* found = malloc(sizeof(char)*MAX_FOUND_LENGTH);
+	  	  int count = 0;
+		  if(regex_match(fp,found,cp))
+		    count++;
+            		if (count > 0) 
+            		{
+			    char full_path[PATH_MAX + 1];
+			    char* res = realpath(dirp->d_name,full_path);
+			    printf("%s is found in file %s \n", found, full_path);
+			    printf("\n");
+           	 	}
+  //         	 	free(found);		  
+		  
+		  
+		  fclose(fp); 
+	  	  fclose(cp);
+*/            
  		}
  		if(ar.l > 0){ 		
 		  scanLink(ar.pval, ar.sval);
@@ -321,7 +349,128 @@ void scanFile2(char *pathname, char *findthis){
 	    	cc = line[linepos];
 	    	if(cc == findthis[hits] )
 	    	{
-	    	hits++;
+	   	 	hits++;
+		    	if(findthis[hits] == '*')//qwea*bcd = qweabcd, qwebcd, qweaabcd
+		    	{
+		    		char afterstar = findthis[hits+1];
+		    		char beforestar = findthis[hits-1];
+//		printf("after:%c before:%c curr:%c \n",afterstar, beforestar, line[linepos]);			    			    		
+		    		if(line[linepos+1] == beforestar)
+		    		{ 
+		    			temp[hits] = line[linepos];
+		    			fdot = 1;
+		    			hits++;// linepos++;
+//		    			printf("temp:%c ful:%s\n",line[linepos+1], temp);
+		    			while(line[linepos++] == beforestar)
+		    			{
+//		    			  needlen++;
+		    			  hits++;	    			
+		    			}
+		    			if(line[linepos] != afterstar)
+		    			{
+		    			  needlen = strlen(findthis);
+		    			  hits = 0;
+		    			}
+		    			else
+		    			{
+		    			  needlen--;
+		    			  hits++;
+		    			}
+		    		}
+		    		else if(line[linepos+1] == afterstar)
+		    		{
+		    		linepos++;
+		    		needlen -= 2;
+		    		hits++;
+		    		}
+		    		else
+		    		{
+		    		hits = 0; 
+		    		needlen = strlen(findthis);
+		    		}	    	
+		    	}
+/*		    	else if(findthis[hits+1] == '*')//qwea*bcd = qweabcd, qwebcd, qweaabcd
+		    	{
+		    		char afterstar = findthis[hits+2];
+		    		char beforestar = findthis[hits];
+//	printf("after:%c before:%c curr:%c \n",afterstar, beforestar, line[linepos]);	
+		    		if(line[linepos+1] == beforestar)
+		    		{	temp[hits+1] = line[linepos+1]; fdot = 1;
+		    			hits++; linepos++;
+		    			while(line[linepos++] == beforestar)
+		    			{
+		    			  needlen++;
+		    			  hits++;	    			
+		    			}
+		    			if(line[linepos] != afterstar)
+		    			{
+		    			  needlen = strlen(findthis);
+		    			  hits = 0;
+		    			}
+		    			else
+		    			{
+		    			  needlen--;
+		    			  hits++;
+		    			}
+		    		}
+		    		else if(line[linepos+1] == afterstar)
+		    		{
+		    		linepos++;
+		    		needlen -= 2;
+		    		hits++;
+		    		}
+		    		else
+		    		{
+		    		hits = 0;
+		    		needlen = strlen(findthis);
+		    		}
+		    	}
+*/		    	else if(findthis[hits] == '?')
+		    	{
+
+		    		char afterstar = findthis[hits+1];
+		    		char beforestar = findthis[hits-1];
+//		printf("after:%c before:%c curr:%c \n",afterstar, beforestar, line[linepos]);			    			    		
+		    		if(line[linepos+1] == beforestar)
+		    		{ 
+		    			temp[hits] = line[linepos];
+		    			fdot = 1;
+		    			hits++;// linepos++;
+//		    			printf("temp:%c ful:%s\n",line[linepos+1], temp);
+		    			while(line[linepos++] == beforestar)
+		    			{
+//		    			  needlen++;
+		    			  hits++;	    			
+		    			}
+		    			if(line[linepos] != afterstar)
+		    			{
+		    			  needlen = strlen(findthis);
+		    			  hits = 0;
+		    			}
+		    			else
+		    			{
+		    			  needlen--;
+		    			  hits++;
+		    			}
+		    		}
+		    		else if(line[linepos+1] == afterstar)
+		    		{
+		    		linepos++;
+		    		needlen -= 2;
+		    		hits++;
+		    		}
+		    		else
+		    		{
+		    		hits = 0; 
+		    		needlen = strlen(findthis);
+		    		}
+		    	}
+		    	else
+		    	{
+
+		    		
+		    	}	
+ 	
 	    	}
 	    	else if(findthis[hits] == '.')
 	    	{	
@@ -330,87 +479,93 @@ void scanFile2(char *pathname, char *findthis){
 //	    	printf("Findthis:%s Temp is:\"%s\"   cc:%c\n",findthis, temp, line[linepos]);	
 	    	hits++;    fdot = 1;
 	    	}
-	    	else if(findthis[hits+1] == '*')//qwea*bcd = qweabcd, qwebcd, qweaabcd
-	    	{
-	    		char afterstar = findthis[hits+2];
-	    		char beforestar = findthis[hits];	    		
-	    		if(line[linepos+1] == beforestar)
-	    		{
-	    			hits++; linepos++;
-	    			while(line[linepos++] == beforestar)
-	    			{
-	    			  needlen++;
-	    			  hits++;	    			
-	    			}
-	    			if(line[linepos] != afterstar)
-	    			{
-	    			  needlen = strlen(findthis);
-	    			  hits = 0;
-	    			}
-	    			else
-	    			{
-	    			  needlen--;
-	    			  hits++;
-	    			}
-	    		}
-	    		else if(line[linepos+1] == afterstar)
-	    		{
-	    		linepos++;
-	    		needlen -= 2;
-	    		hits++;
-	    		}
-	    		else
-	    		{
-	    		hits = 0; 
-	    		needlen = strlen(findthis);
-	    		}	    	
-	    	}
-	    	else if(findthis[hits+2] == '*')//qwea*bcd = qweabcd, qwebcd, qweaabcd
-	    	{
-	    		char afterstar = findthis[hits+3];
-	    		char beforestar = findthis[hits+1];
-	    		if(line[linepos+1] == beforestar)
-	    		{
-	    			hits++; linepos++;
-	    			while(line[linepos++] == beforestar)
-	    			{
-	    			  needlen++;
-	    			  hits++;	    			
-	    			}
-	    			if(line[linepos] != afterstar)
-	    			{
-	    			  needlen = strlen(findthis);
-	    			  hits = 0;
-	    			}
-	    			else
-	    			{
-	    			  needlen--;
-	    			  hits++;
-	    			}
-	    		}
-	    		else if(line[linepos+1] == afterstar)
-	    		{
-	    		linepos++;
-	    		needlen -= 2;
-	    		hits++;
-	    		}
-	    		else
-	    		{
-	    		hits = 0;
-	    		needlen = strlen(findthis);
-	    		}
-	    	}
-	    	else if(cc == '?')
-	    	{
-	    	
-	    	}
 	    	else
 	    	{
 	    		hits = 0;
-	    		fdot = 0;
-	    		
-	    	}
-	    
+//	    		fdot = 0;
+	    	}	
+	    	    	
+/*
+		    	if(findthis[hits+1] == '*')//qwea*bcd = qweabcd, qwebcd, qweaabcd
+		    	{
+		    		char afterstar = findthis[hits+2];
+		    		char beforestar = findthis[hits];	    		
+		    		if(line[linepos+1] == beforestar)
+		    		{
+		    			hits++; linepos++;
+		    			while(line[linepos++] == beforestar)
+		    			{
+		    			  needlen++;
+		    			  hits++;	    			
+		    			}
+		    			if(line[linepos] != afterstar)
+		    			{
+		    			  needlen = strlen(findthis);
+		    			  hits = 0;
+		    			}
+		    			else
+		    			{
+		    			  needlen--;
+		    			  hits++;
+		    			}
+		    		}
+		    		else if(line[linepos+1] == afterstar)
+		    		{
+		    		linepos++;
+		    		needlen -= 2;
+		    		hits++;
+		    		}
+		    		else
+		    		{
+		    		hits = 0; 
+		    		needlen = strlen(findthis);
+		    		}	    	
+		    	}
+		    	else if(findthis[hits+2] == '*')//qwea*bcd = qweabcd, qwebcd, qweaabcd
+		    	{
+		    		char afterstar = findthis[hits+3];
+		    		char beforestar = findthis[hits+1];
+		    		if(line[linepos+1] == beforestar)
+		    		{
+		    			hits++; linepos++;
+		    			while(line[linepos++] == beforestar)
+		    			{
+		    			  needlen++;
+		    			  hits++;	    			
+		    			}
+		    			if(line[linepos] != afterstar)
+		    			{
+		    			  needlen = strlen(findthis);
+		    			  hits = 0;
+		    			}
+		    			else
+		    			{
+		    			  needlen--;
+		    			  hits++;
+		    			}
+		    		}
+		    		else if(line[linepos+1] == afterstar)
+		    		{
+		    		linepos++;
+		    		needlen -= 2;
+		    		hits++;
+		    		}
+		    		else
+		    		{
+		    		hits = 0;
+		    		needlen = strlen(findthis);
+		    		}
+		    	}
+		    	else if(findthis[hits] == '?')
+		    	{
+		    	
+		    	}
+		    	else
+		    	{
+
+		    		
+		    	}
+*/	    
 	    	if(hits == needlen)
 	    	{
 		    	if(fdot == 1)
@@ -659,5 +814,336 @@ int myfunc(const char *pathname, const struct stat *statptr, int type)
 	}
 	return(0);
 }
+
+char* wanted;
+char* allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.*?";
+
+#define FLAGS_NUMBER 5
+#define MAX_FILENAME_LENGTH 100
+#define MAX_FOUND_LENGTH 100
+#define MAX_LINE 1024
+#define SL_LIST_SIZE 1
+
+int clear_string(char* str) 
+{ 
+    int len = strlen(str); 
+    int i; 
+    for (i = 0; i < len; i++)
+	str[i] = '\0';
+    return 1;
+}
+
+
+int regex_match(FILE* fp,char* found_string,FILE* cp) 
+{ 
+    
+    char buf[MAX_LINE];  
+    clear_string(buf);
+    fgets(buf,MAX_LINE,cp);
+    char* alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    int alphabet_length = strlen(alphabet);
+    // dont forget about the case when file is empty
+    int len = strlen(wanted);
+    int wanted_index = 0; 
+    int found_index = 0;
+    int c;
+    int line_count = 0;
+    do 
+    {
+    	c = fgetc (fp);
+    	if (c == '\n') 
+    	{
+	    clear_string(buf);
+	    //printf("new line %s \n",buf);
+	    line_count++;
+	    fgets(buf,MAX_LINE,cp);
+    	}
+    	if (wanted[wanted_index] == '.')
+    	{
+	    int i; 
+	    for (i = 0; i < alphabet_length; i++) 
+	    {
+		if (c == alphabet[i]) 
+		{ 
+		    found_string[found_index] = c;
+		    if (++wanted_index == len)
+		    {
+			found_index++;
+			if (buf[strlen(buf)-1] != '\n')
+			    printf("line in the file:  %s \n", buf);
+			else 
+			    printf("line in the file: %s", buf);
+			return 1;
+		    }
+		    else 
+		    {
+			found_index++;
+			break;
+		    }
+		}
+	    }
+	    if (i == alphabet_length) 
+	    {
+		clear_string(found_string);
+		wanted_index = 0;
+		found_index = 0;
+	    }
+    	}
+    	else if ( (wanted_index + 1 < len) && ( wanted[wanted_index+1] == '?') )  // This shiz better be right
+    	{ 
+	    if (c == wanted[wanted_index+2] && (c != wanted[wanted_index])) // zero occurrences of previous character and make sure 2 characters arent same
+	    {
+		found_string[found_index++] = c;
+		if(wanted_index+2 == len-1)
+		{
+		    if (buf[strlen(buf)-1] != '\n')
+			printf("line in the file:  %s \n", buf);
+		    else 
+			printf("line in the file: %s", buf);    		
+		    return 1;
+		}
+		wanted_index+=3;
+	    }
+	    else if (c == wanted[wanted_index+2] && (c == wanted[wanted_index])) 
+	    { 	
+		found_string[found_index++] = c;
+		int next = fgetc (fp);
+		if (next == '\n') 
+		{
+		    clear_string(buf);
+		    fgets(buf,MAX_LINE,cp);
+		}
+		if (next == EOF) 
+		{
+		    if (buf[strlen(buf)-1] != '\n')
+			printf("line in the file:  %s \n", buf);
+		    else 
+			printf("line in the file: %s", buf);    				
+		    return 1;
+		}	
+		
+		if (next == c) 
+		{ 
+		    found_string[found_index++] = next;
+		    if(wanted_index+2 == len-1)
+		    {
+			if (buf[strlen(buf)-1] != '\n')
+			    printf("line in the file:  %s \n", buf);
+			else 
+			    printf("line in the file: %s", buf);
+			return 1;
+		    }
+		    wanted_index+=3;
+		}
+		else
+		{ 
+		    if (next == wanted[wanted_index+3])
+		    { 
+			found_string[found_index++] = next;
+			if (wanted_index + 3 == len-1) 
+			{
+			    if (buf[strlen(buf)-1] != '\n')
+				printf("line in the file:  %s \n", buf);
+			    else 
+				printf("line in the file: %s", buf);
+			    return 1;
+			}
+			if (wanted_index+4 < len-1 && (wanted[wanted_index+4] == '?' || wanted[wanted_index+4] == '*' )) //to deal with Hel?lo?o 
+			    wanted_index +=3;
+			else
+			    wanted_index += 4;
+		    } 
+		    else 
+		    { 
+			clear_string(found_string);
+			wanted_index = 0;
+			found_index = 0;
+		    }
+		}
+		
+	    } 
+	    else 
+	    { 
+		if (c == wanted[wanted_index]) 
+		{ 
+		    found_string[found_index++] = c;
+		    wanted_index+=2;
+		}
+		else
+		{
+		    clear_string(found_string);
+		    wanted_index = 0;
+		    found_index = 0;
+		}
+	    }
+    	}
+    	else if ( (wanted_index + 1 < len) && ( wanted[wanted_index+1] == '*') ) 
+    	{ 
+	    if (c == wanted[wanted_index+2] && (c != wanted[wanted_index])) // zero occurrences of previous character and make sure 2 characters arent same
+	    {
+		found_string[found_index++] = c;
+		if(wanted_index+2 == len-1)
+		{
+		    if (buf[strlen(buf)-1] != '\n')
+			printf("line in the file:  %s \n", buf);
+		    else 
+			printf("line in the file: %s", buf);    	
+		    return 1;
+		}
+		wanted_index+=3;
+	    } 
+	    else if (c == wanted[wanted_index+2] && (c == wanted[wanted_index])) 
+	    { 	
+		found_string[found_index++] = c;
+		
+		int next;
+		do 
+		{ 
+		    next = fgetc(fp); 
+		    if (next == '\n') 
+		    {
+			clear_string(buf);
+			fgets(buf,MAX_LINE,cp);
+		    }
+		    if (next == EOF)
+		    {
+			//	printf("end of file\n"); 
+			if (buf[strlen(buf)-1] != '\n')
+			    printf("line in the file:  %s \n", buf);
+			else 
+			    printf("line in the file: %s", buf);    		
+			return 1;
+		    } 
+		    
+		    if (next != wanted[wanted_index])
+			break;
+		    
+		    found_string[found_index++] = c;
+		    //printf("found_string = %s \n", found_string);
+		} while (next == wanted[wanted_index]);
+		if (next == wanted[wanted_index+3])
+		{ 
+		    found_string[found_index++] = next;
+		    if (wanted_index + 3 == len-1) 
+		    {
+			if (buf[strlen(buf)-1] != '\n')
+			    printf("line in the file:  %s \n", buf);
+			else 
+			    printf("line in the file: %s", buf);					
+			return 1;
+		    }
+		    if (wanted_index+4 < len-1 && (wanted[wanted_index+4] == '?' || wanted[wanted_index+4] == '*' )) //to deal with Hel?lo?o 
+			wanted_index +=3;
+		    else
+			wanted_index += 4;
+		} 
+		else 
+		{ 
+		    clear_string(found_string);
+		    wanted_index = 0;
+		    found_index = 0;
+		}
+	    }
+	    else 
+	    { 
+		
+		//found_string[found_index++] = c;
+		if (c == wanted[wanted_index])
+		{
+		    //printf("found %s \n", found_string);
+		    
+		    found_string[found_index++] = c;
+		    
+		    int next;
+		    do 
+		    { 
+			//	printf("found %s \n", found_string);
+			next = fgetc(fp); 
+			if (next == '\n') 
+			{
+			    clear_string(buf);
+			    fgets(buf,MAX_LINE,cp);
+			}
+			if (next == EOF)
+			{
+			    if (buf[strlen(buf)-1] != '\n')
+				printf("line in the file:  %s \n", buf);
+			    else 
+				printf("line in the file: %s", buf);    	
+			    return 1; 
+			}
+			if (next != wanted[wanted_index])
+			    break;
+    			
+			found_string[found_index++] = c;
+		    } while (next == wanted[wanted_index]);
+		    if (next == wanted[wanted_index+2]) 
+		    { 
+			found_string[found_index++] = next;
+			if (wanted_index + 3 == len-1) 
+			{
+			    if (buf[strlen(buf)-1] != '\n')
+				printf("line in the file:  %s \n", buf);
+			    else 
+				printf("line in the file: %s", buf);					
+			    return 1;
+			}
+			if (wanted_index+4 < len-1 && (wanted[wanted_index+4] == '?' || wanted[wanted_index+4] == '*' )) //to deal with Hel?lo?o 
+			    wanted_index +=3;
+			else
+			    wanted_index += 4;
+		    }
+		    else 
+		    { 
+			clear_string(found_string);
+			wanted_index = 0;
+			found_index = 0;
+		    }
+		}
+		else 
+		{ 
+		    clear_string(found_string);
+		    wanted_index = 0;
+		    found_index = 0;
+		}
+	    }
+	    
+    	} 
+    	
+    	else if ((wanted[wanted_index] != '.') && (wanted[wanted_index] != '*') && (wanted[wanted_index] != '?')) 
+    	{
+	    if(c == wanted[wanted_index])
+	    {
+		found_string[found_index++] = c;
+		
+		if (++wanted_index == len)
+		{
+		    found_index++;
+		    if (buf[strlen(buf)-1] != '\n')
+			printf("line in the file:  %s \n", buf);
+		    else 
+			printf("line in the file: %s", buf);    
+		    return 1;    		 
+		}
+	    }
+	    else 
+	    {
+		clear_string(found_string);
+		found_index = 0;
+		wanted_index = 0;
+	    }
+    	}
+    } while (c != EOF);
+    return 0;
+}
+
+
+
+
+
+
+
+
+
 
 
