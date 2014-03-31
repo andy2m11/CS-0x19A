@@ -289,9 +289,18 @@ void scanFile2(char *pathname, char *findthis){
 	int linepos = 0;
 	int matchcount = 0;
 	int needlen = strlen(findthis);
-	char cc;
+	char cc; char dot; 
+	int fdot=0;
+	char temp[50]; 
+	char trans;
 	int hits = 0;
 //	fprintf(stderr, "Looking for %s in: %s\n",findthis ,pathname);
+
+	for(ii = 0; findthis[ii] != NULL; ii++)
+	{
+		trans = findthis[ii];
+		temp[ii] = trans;
+	}
 	FILE* pFile;
 	pFile = fopen(pathname, "r");
 	if (pFile == NULL){
@@ -303,20 +312,60 @@ void scanFile2(char *pathname, char *findthis){
 	  {
 	    line_count++;
 	    linepos = 0;
-	    while(line[linepos] != '\n')
+	    while(linepos < strlen(line))//while(line[linepos] != '\n')
 	    {   
-	    if(line[linepos] == '\n')
-	    {printf("NEWLINE FOUND \n");}
-	 //   printf("line pos: %d\n", linepos);
+//	    if(line[linepos] == '\n')
+//	    {printf("NEWLINE FOUND \n");}
+//	    printf(" %c ", line[linepos]);
+//	    printf(" \nLENGTH: %d \n", strlen(line)); 
 	    	cc = line[linepos];
-	    	if(cc == findthis[hits] || findthis[hits] == '.')
+	    	if(cc == findthis[hits] )
 	    	{
 	    	hits++;
 	    	}
-	    	else
-	    	{	hits = 0;   	}
-	    	
-	    	if(findthis[hits+2] == '*')//qwea*bcd = qweabcd, qwebcd, qweaabcd
+	    	else if(findthis[hits] == '.')
+	    	{	
+	    	dot = line[linepos];
+	    	temp[hits] = dot;		    	
+//	    	printf("Findthis:%s Temp is:\"%s\"   cc:%c\n",findthis, temp, line[linepos]);	
+	    	hits++;    fdot = 1;
+	    	}
+	    	else if(findthis[hits+1] == '*')//qwea*bcd = qweabcd, qwebcd, qweaabcd
+	    	{
+	    		char afterstar = findthis[hits+2];
+	    		char beforestar = findthis[hits];	    		
+	    		if(line[linepos+1] == beforestar)
+	    		{
+	    			hits++; linepos++;
+	    			while(line[linepos++] == beforestar)
+	    			{
+	    			  needlen++;
+	    			  hits++;	    			
+	    			}
+	    			if(line[linepos] != afterstar)
+	    			{
+	    			  needlen = strlen(findthis);
+	    			  hits = 0;
+	    			}
+	    			else
+	    			{
+	    			  needlen--;
+	    			  hits++;
+	    			}
+	    		}
+	    		else if(line[linepos+1] == afterstar)
+	    		{
+	    		linepos++;
+	    		needlen -= 2;
+	    		hits++;
+	    		}
+	    		else
+	    		{
+	    		hits = 0; 
+	    		needlen = strlen(findthis);
+	    		}	    	
+	    	}
+	    	else if(findthis[hits+2] == '*')//qwea*bcd = qweabcd, qwebcd, qweaabcd
 	    	{
 	    		char afterstar = findthis[hits+3];
 	    		char beforestar = findthis[hits+1];
@@ -358,12 +407,20 @@ void scanFile2(char *pathname, char *findthis){
 	    	else
 	    	{
 	    		hits = 0;
+	    		fdot = 0;
+	    		
 	    	}
 	    
 	    	if(hits == needlen)
 	    	{
-	    	printf("\"%s\" found on line %d in: %s\n", findthis, line_count, pathname);
-	    	
+		    	if(fdot == 1)
+		    	{
+		    	printf("\"%s\" found on line %d in: %s\n", temp, line_count, pathname);
+		    	}
+		    	else
+		    	{
+		    	printf("\"%s\" found on line %d in: %s\n", findthis, line_count, pathname);		    	
+		    	}
 	    	}
 	    linepos++;
 	    }
