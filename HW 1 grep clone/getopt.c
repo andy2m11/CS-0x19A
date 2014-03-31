@@ -35,7 +35,7 @@ void scanFile(char *pathname, char *findthis);
 int wildcards(char **outputstr, char *inputstr);
 int match(char *first, char * second);
 void wcScan(char *pathname, char *findthis);
-int cdot(char *ostr, char *istr);
+int cdot(char *pathname, char *findthis);
 
 
 
@@ -218,16 +218,17 @@ int getPaths(Myfunc* func){
 		  if(ar.pval[n+fnlen] == ar.fval[0]){	//match with chosen file type
 //		    fprintf(stdout, "%s\n", ar.pval); // print full file pathname
 //		    fprintf(stdout, "%s\n", dirp->d_name); // print name of file
-		    scanFile(ar.pval, ar.sval);
+//		    scanFile(ar.pval, ar.sval);
 //		    scanFile(dirp->d_name, ar.sval);
 //		  cdot(ar.pval, ar.sval);		    
  		  }
  		}
  		else{
 //		  fprintf(stdout, "%s\n", ar.pval); // print full file pathname
-		  scanFile(ar.pval, ar.sval);
+//		  scanFile(ar.pval, ar.sval);
 //		  wcScan(ar.pval, ar.sval);
-//		  cdot(ar.pval, ar.sval);
+		  cdot(ar.pval, ar.sval);
+	
  		}
  		if(ar.l > 0){ 		
 		  scanLink(ar.pval, ar.sval);
@@ -282,52 +283,22 @@ void scanFile(char *pathname, char *findthis){
 	
 }
 
-//---------------------------------------------------------------------
-int myfunc(const char *pathname, const struct stat *statptr, int type)
-{
-//	fprintf(stderr, "%s\n", pathname);
-	switch (type) {
-		case FTW_F:
-		  switch (statptr->st_mode & S_IFMT) {
-		    case S_IFREG:
-		      nreg++;
-		      break;
-		    case S_IFBLK:
-		      nblk++;
-		      break;
-		    case S_IFCHR:
-		      nchr++;
-		      break;
-		    case S_IFIFO:
-		      nfifo++;
-		      break;
-		    case S_IFLNK:
-		      nslink++;
-		      break;
-		    case S_IFSOCK: 
-		      nsock++;
-		      break;
-		    case S_IFDIR:
-	              /* directories should have type = FTW_D */
-		      fprintf(stderr, "for s_IFDIR for %s\n", pathname);
-		  }
-		break;
-		case FTW_D:
-		  ndir++;
-		  break;
-		case FTW_DNR:
-		  fprintf(stderr, "%s\n", "Can't read directory");	
-		  break;
-		case FTW_NS:
-		  fprintf(stderr, "%s %s\n", "stat error for", pathname);
-		  break;
-		default:
-		  fprintf(stderr, "unknown type %d for pathname %s", type, pathname);
-	}
-	return(0);
-}
 //-----------------------------------------------------------------------------
 
+
+int splitdot(char *input, int dotpos, char *out1, char *out2){
+
+	int len = strlen(input);
+//	printf("len =%d, dotpos=%d \n", len, dotpos);
+	memmove(out1, input, dotpos);
+	memmove(out2, input+dotpos+1, len-dotpos);
+
+//	memset(out1+dotpos, 0, len);
+//	*out1[0] = '5';
+//	*out1[dotpos] = '\0';
+//	*out2[len-dotpos] = '\0';
+//	printf("o1 =%s, o2=%s \n", *out1, *out2);
+}
 
 
 //void wildcards(char **outputstr, char *inputstr){
@@ -408,63 +379,150 @@ void wcScan(char *pathname, char *findthis){
 	    line_count++;
 	    m = match(line, findthis);
 	    if(m != 0){
-	      fprintf(stdout, "%d \n", m);
-//	      fprintf(stdout, "\"%s\" found on line %d in: %s\n", findthis, line_count, pathname);
-//	      fprintf(stdout, "line%d:  ", line_count);
-//	      fprintf(stdout, "   %s",line);
-//	      fprintf(stdout, "In:%s", pathname);		      
+//	      fprintf(stdout, "%d \n", m);
+	      fprintf(stdout, "\"%s\" found on line %d in: %s\n", findthis, line_count, pathname);		      
 	    }
 	  }
 	  fclose(pFile);	  
 	}	
 }
 
-int cdot(char *ostr, char *istr){
-	int buflen = 2048;
+int match_dot(char *compare, char *findthis){
+
+	char *w1;
+	char *w2;
+	printf("compare:%s , find:%s \n", compare, findthis);	
+	int ii = 0;
+	int pos = 0;
+	char *match1;
+	char *match2;	//testing.one 
+	int len = strlen(findthis);
+	int clen = 0;
+	int lw1 = 0;
+	int lw2 = 0;
+	for(ii = 0; ii < len; ii++)
+	{
+		if(findthis[ii] == '.')
+		{ pos = ii;	}
+	}
+	splitdot(findthis, pos, w1, w2);
+	w2[2] = '\0';
+	w1[2] = '\0';
+	fprintf(stderr, "in:%s  pos:%d out1:%s   out2:%s    \n ", findthis, pos, w1, w2);
+//	w2[2] = '\0';
+	
+	clen = strlen(w2);
+//	char line[5];
+
+//	for(ii = 0; ii < 5; ii++)
+//	{
+//		line[ii] = compare[ii];
+	
+//	}
+//	line[4] = '\0';
+	lw1 = strlen(w1); lw2 = strlen(w2);
+	fprintf(stderr, "w1:%d w2:%d \n" , lw1, lw2);
+//	match1 = strstr(line, w1);
+//	match1 = strstr(line, w1);//
+//	if(match1 == NULL)
+//	{ return 0;		}
+//	match2 = strstr(compare, w2);
+//	printf("m1:%s  m2:%s \n", match1, match2);
+/*
+	if(match1 + 1 == match2)
+	{	printf("m1:%s  m2:%s \n", match1, match2);
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+*/
+}
+
+int cdot(char *pathname, char *findthis){//pathname, findthis
+	fprintf(stderr, "CDOT ENTERED \n");
+	int buflen =1024;
 	char line[buflen];
 	int line_count = 0;
 	int m = 0;
-	int len = strlen(istr);
+	int len = strlen(findthis);
 	int ii = 0;
 	int count = 0;
-	for(ii = 0; ii < len; ii++){
-		if(istr[ii] == '.'){
-		fprintf(stderr, "------------------------------%c\n",istr[ii]);
-		
-		}
 
-		count++;
-	}
 //	fprintf(stderr, "Looking for %s in: %s\n",findthis ,pathname);
 	FILE* pFile;
-	pFile = fopen(ostr, "r");
+	pFile = fopen(pathname, "r");
 	if (pFile == NULL){
-	  fprintf(stderr, "Unable to open: %s\n", ostr);
+	  fprintf(stderr, "Unable to open: %s\n", pathname);
 	}
 	else{
-	  while(fgets(line, buflen, pFile) != NULL){
+	  while(fgets(line, buflen, pFile) != NULL){	  
+	  fprintf(stderr, "line: %s\n", line);
 	    line_count++;
-	    m = match(line, istr);
+	    m = match_dot(line, findthis);
 	    if(m != 0){
 //	      fprintf(stdout, "%d \n", m);
-//	      fprintf(stdout, "\"%s\" found on line %d in: %s\n", findthis, line_count, pathname);
-//	      fprintf(stdout, "line%d:  ", line_count);
-//	      fprintf(stdout, "   %s",line);
-//	      fprintf(stdout, "In:%s", pathname);		      
+	      fprintf(stdout, "\"%s\" found on line %d in: %s\n", findthis, line_count, pathname);
+	      	      
 	    }
 	  }
 	  fclose(pFile);	  
 	}	  
 }
-int cstar(char *ostr, char *istr){
+int cstar(char *pathname, char *findthis){
 
 }
-int cqmark(char *ostr, char *istr){
+int cqmark(char *pathname, char *findthis){
 
 }
 
 
 
 
+//---------------------------------------------------------------------
+int myfunc(const char *pathname, const struct stat *statptr, int type)
+{
+//	fprintf(stderr, "%s\n", pathname);
+	switch (type) {
+		case FTW_F:
+		  switch (statptr->st_mode & S_IFMT) {
+		    case S_IFREG:
+		      nreg++;
+		      break;
+		    case S_IFBLK:
+		      nblk++;
+		      break;
+		    case S_IFCHR:
+		      nchr++;
+		      break;
+		    case S_IFIFO:
+		      nfifo++;
+		      break;
+		    case S_IFLNK:
+		      nslink++;
+		      break;
+		    case S_IFSOCK: 
+		      nsock++;
+		      break;
+		    case S_IFDIR:
+	              /* directories should have type = FTW_D */
+		      fprintf(stderr, "for s_IFDIR for %s\n", pathname);
+		  }
+		break;
+		case FTW_D:
+		  ndir++;
+		  break;
+		case FTW_DNR:
+		  fprintf(stderr, "%s\n", "Can't read directory");	
+		  break;
+		case FTW_NS:
+		  fprintf(stderr, "%s %s\n", "stat error for", pathname);
+		  break;
+		default:
+		  fprintf(stderr, "unknown type %d for pathname %s", type, pathname);
+	}
+	return(0);
+}
 
 
