@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+# Simply runs our my-histogram file on index.html
+puts "Content-Type: image/svg+xml\n\n"
+foo = IO.popen("./my-histogram ./index.html","r+")
+puts foo.readlines
